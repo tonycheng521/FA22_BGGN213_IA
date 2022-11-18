@@ -1,0 +1,32 @@
+---
+title: "Lab16"
+format: html
+---
+
+```{r}
+install.packages("usethis")
+library(usethis)
+create_github_token()
+```
+
+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
+
+```{r}
+install.packages("gitcreds")
+library(gitcreds)
+gitcreds_set()
+```
+
+```{r}
+create_github_token(
+  scopes = c("repo", "user", "gist", "workflow"),
+  description = "DESCRIBE THE TOKEN'S USE CASE",
+  host = NULL
+)
+
+gh_token_help(host = NULL)
+```
+
+
+
+

@@ -1,0 +1,198 @@
+---
+title: "Class9"
+format: html
+---
+
+```{r}
+data = read.csv("Data Export Summary.csv", row.names = 1)
+data
+```
+#Q1
+```{r}
+data$X.ray = as.numeric(gsub(",", "", data$X.ray))
+data$NMR = as.numeric(gsub(",", "", data$NMR))
+data$EM = as.numeric(gsub(",", "", data$EM))
+data$Total = as.numeric(gsub(",", "", data$Total))
+
+csum = colSums(data)
+csum
+```
+
+```{r}
+csum['X.ray']/csum['Total']
+csum['EM']/csum['Total']
+```
+
+#Q2
+```{r}
+data[1,"Total"]/csum['Total']
+```
+
+#Q3
+4707
+
+#Part 3
+```{r}
+library(bio3d)
+```
+
+```{r}
+pdb = read.pdb('1hsg')
+pdb
+```
+
+
+
+```{r}
+attributes(pdb)
+```
+
+```{r}
+head(pdb$atom)
+```
+
+```{r}
+adk <- read.pdb("6s36")
+adk
+```
+
+```{r}
+# Perform flexiblity prediction
+m <- nma(adk)
+```
+
+```{r}
+plot(m)
+```
+```{r}
+mktrj(m, file="adk_m7.pdb")
+```
+
+
+# Part4
+```{r}
+# Install packages in the R console NOT your Rmd/Quarto file
+
+# install.packages("bio3d")
+# install.packages("devtools")
+# install.packages("BiocManager")
+# 
+# BiocManager::install("msa")
+# devtools::install_bitbucket("Grantlab/bio3d-view")
+```
+
+```{r}
+library(bio3d)
+aa <- get.seq("1ake_A")
+```
+
+```{r}
+aa
+```
+
+```{r}
+# Blast or hmmer search 
+b <- blast.pdb(aa)
+
+```
+
+```{r}
+# Plot a summary of search results
+hits <- plot(b)
+```
+```{r}
+# List out some 'top hits'
+head(hits$pdb.id)
+```
+
+```{r}
+hits <- NULL
+hits$pdb.id <- c('1AKE_A','6S36_A','6RZE_A','3HPR_A','1E4V_A','5EJE_A','1E4Y_A','3X2S_A','6HAP_A','6HAM_A','4K46_A','3GMT_A','4PZL_A')
+```
+
+```{r}
+# Download releated PDB files
+files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
+```
+
+```{r}
+# Align releated PDBs
+pdbs <- pdbaln(files, fit = TRUE, exefile="msa")
+```
+
+```{r}
+# Vector containing PDB codes for figure axis
+ids <- basename.pdb(pdbs$id)
+
+# Draw schematic alignment
+plot(pdbs, labels=ids)
+```
+```{r}
+anno <- pdb.annotate(ids)
+unique(anno$source)
+
+```
+
+```{r}
+# Perform PCA
+pc.xray <- pca(pdbs)
+plot(pc.xray)
+```
+```{r}
+# Calculate RMSD
+rd <- rmsd(pdbs)
+
+# Structure-based clustering
+hc.rd <- hclust(dist(rd))
+grps.rd <- cutree(hc.rd, k=3)
+
+plot(pc.xray, 1:2, col="grey50", bg=grps.rd, pch=21, cex=1)
+
+```
+#5
+```{r}
+# Visualize first principal component
+pc1 <- mktrj(pc.xray, pc=1, file="pc_1.pdb")
+```
+
+
+```{r}
+#Plotting results with ggplot2
+library(ggplot2)
+library(ggrepel)
+
+df <- data.frame(PC1=pc.xray$z[,1], 
+                 PC2=pc.xray$z[,2], 
+                 col=as.factor(grps.rd),
+                 ids=ids)
+
+p <- ggplot(df) + 
+  aes(PC1, PC2, col=col, label=ids) +
+  geom_point(size=2) +
+  geom_text_repel(max.overlaps = 20) +
+  theme(legend.position = "none")
+p
+```
+
+#6
+```{r}
+# NMA of all structures
+modes <- nma(pdbs)
+```
+
+```{r}
+plot(modes, pdbs, col=grps.rd)
+```
+
+![](1HSG.png)
+
+
+
+
+
+
+
+
+
+
+
